@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#16181D">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Qwixx Block</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Figtree:wght@400;600;700;800&display=swap">
+<style>
+:root{
+  --bg:#ECEEF1; --paper:#FFFFFF; --ink:#16181D; --muted:#5F6670; --line:#D5D9DF;
+  --red:#D7262E; --red-t:#FBE3E3; --yellow:#E8B400; --yellow-t:#FCF3CF; --yellow-ink:#7A5A00;
+  --green:#1E9A4B; --green-t:#DDF2E4; --blue:#1F5FBF; --blue-t:#DFE8F8;
+  --cross:#16181D; --dead:#C9CDD3;
+  --f-display:"Archivo Black","Arial Black",Impact,sans-serif;
+  --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#101216; --paper:#1A1D23; --ink:#E9ECF0; --muted:#98A0AB; --line:#2E333B;
+  --red:#F0565C; --red-t:#3A1C1F; --yellow:#F2C53A; --yellow-t:#3A3115; --yellow-ink:#F2C53A;
+  --green:#3DBE6C; --green-t:#16301F; --blue:#5B92EC; --blue-t:#18253D;
+  --cross:#FFFFFF; --dead:#3A3F48; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;
+  padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(40px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(30px,8vw,44px);line-height:1;margin:0;display:flex;gap:2px}
+h1 b{font-weight:400}
+h1 b:nth-child(1){color:var(--red)} h1 b:nth-child(2){color:var(--yellow)} h1 b:nth-child(3){color:var(--green)} h1 b:nth-child(4){color:var(--blue)}
+h1 span{margin-left:12px}
+.sub{color:var(--muted);font-size:13px;margin-top:6px}
+.tabs{display:flex;gap:6px;overflow-x:auto;border-bottom:2px solid var(--line)}
+.tab{font:inherit;font-weight:700;background:transparent;border:0;border-bottom:3px solid transparent;margin-bottom:-2px;color:var(--muted);padding:10px 14px;cursor:pointer;white-space:nowrap;min-height:44px}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.tab.add{color:var(--green);font-size:20px;padding:6px 14px}
+.sheet{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:16px;min-width:0}
+.label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:0 0 10px}
+.note{font-size:13px;color:var(--muted);margin:0}
+.btn{font:inherit;font-weight:700;border:0;border-radius:6px;padding:12px 16px;cursor:pointer;min-height:46px;background:var(--ink);color:var(--paper)}
+.btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+.btn.small{min-height:36px;padding:6px 12px;font-size:13px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+input[type=text]{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:6px;padding:10px 12px;width:100%}
+button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.who{font-family:var(--f-display);font-size:22px;background:none;border:0;color:var(--ink);padding:0;cursor:pointer;text-align:left}
+.total{font-family:var(--f-display);font-size:32px;line-height:1;font-variant-numeric:tabular-nums}
+.total small{font-family:var(--f-body);font-size:12px;font-weight:600;color:var(--muted);margin-left:4px}
+.rows{display:flex;flex-direction:column;gap:6px}
+.qrow{display:grid;grid-template-columns:repeat(11,minmax(0,1fr)) minmax(0,1.1fr);gap:4px;padding:5px;border-radius:7px;background:var(--c)}
+.qrow[data-c="r"]{--c:var(--red);--t:var(--red-t);--n:var(--red)}
+.qrow[data-c="y"]{--c:var(--yellow);--t:var(--yellow-t);--n:var(--yellow-ink)}
+.qrow[data-c="g"]{--c:var(--green);--t:var(--green-t);--n:var(--green)}
+.qrow[data-c="b"]{--c:var(--blue);--t:var(--blue-t);--n:var(--blue)}
+.cell{position:relative;aspect-ratio:1;border:0;border-radius:5px;background:var(--t);color:var(--n);font-family:var(--f-display);font-size:clamp(12px,3vw,20px);display:grid;place-items:center;cursor:pointer;padding:0;min-width:0;-webkit-tap-highlight-color:transparent}
+.cell.skip{color:var(--dead);opacity:.55}
+.cell.x::after{content:"";position:absolute;inset:12%;background:
+  linear-gradient(45deg,transparent 44%,var(--cross) 44%,var(--cross) 56%,transparent 56%),
+  linear-gradient(-45deg,transparent 44%,var(--cross) 44%,var(--cross) 56%,transparent 56%)}
+.cell.last,.cell.hint{box-shadow:inset 0 0 0 2px var(--n)}
+.lock{background:var(--paper);color:var(--c);border-radius:50%}
+.lock svg{width:56%;height:56%}
+.lock.other{color:var(--dead)}
+.qrow.closed .cell:not(.x):not(.hint):not(.lock){opacity:.35}
+.rowinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:14px}
+.ri{border-radius:6px;padding:8px;text-align:center;border:1.5px solid var(--line)}
+.ri b{display:block;font-family:var(--f-display);font-weight:400;font-size:20px;font-variant-numeric:tabular-nums}
+.ri span{font-size:11px;color:var(--muted)}
+.ri[data-c="r"] b{color:var(--red)} .ri[data-c="y"] b{color:var(--yellow-ink)} .ri[data-c="g"] b{color:var(--green)} .ri[data-c="b"] b{color:var(--blue)}
+.pen{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}
+.pens{display:flex;gap:6px}
+.pbox{width:42px;height:42px;border:2px solid var(--line);border-radius:6px;background:var(--bg);cursor:pointer;position:relative;padding:0}
+.pbox.x::after{content:"";position:absolute;inset:16%;background:
+  linear-gradient(45deg,transparent 42%,var(--red) 42%,var(--red) 58%,transparent 58%),
+  linear-gradient(-45deg,transparent 42%,var(--red) 42%,var(--red) 58%,transparent 58%)}
+.hint-line{min-height:1.4em;margin-top:10px}
+.banner{border:2px solid var(--ink);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--paper)}
+.banner strong{font-family:var(--f-display);font-weight:400;font-size:18px}
+.hist{list-style:none;margin:0;padding:0;font-size:14px}
+.hist li{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)}
+.hist li:last-child{border-bottom:0}
+.hist b{font-variant-numeric:tabular-nums}
+.meta{color:var(--muted);font-size:12px}
+.scale{display:flex;flex-wrap:wrap;gap:2px;font-size:11px;color:var(--muted);margin-top:12px;font-variant-numeric:tabular-nums}
+.scale span{border:1px solid var(--line);border-radius:3px;padding:2px 5px;text-align:center;min-width:34px}
+.scale em{display:block;font-style:normal;font-weight:700;color:var(--ink)}
+[hidden]{display:none!important}
+@media (max-width:480px){.qrow{gap:3px;padding:4px}.sheet{padding:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><b>Q</b><b>w</b><b>i</b><b>x</b><b>x</b><span>Block</span></h1>
+    <div class="sub">Jeder öffnet die Seite auf seinem Handy und kreuzt für sich. Mit + gibt es einen weiteren Block.</div>
+  </header>
+
+  <nav class="tabs" id="tabs" aria-label="Blöcke"></nav>
+
+  <section class="sheet" id="newBox" hidden>
+    <p class="label">Neuer Block</p>
+    <input type="text" id="newName" placeholder="Dein Name" autocomplete="off">
+    <div class="actions" style="margin-top:10px">
+      <button class="btn" id="newGo">Block öffnen</button>
+      <button class="btn ghost" id="newCancel">Abbrechen</button>
+    </div>
+  </section>
+
+  <div id="endBox" class="banner" hidden></div>
+
+  <section class="sheet" id="card">
+    <div class="head">
+      <button class="who" id="who" title="Namen ändern"></button>
+      <div class="total" id="total"></div>
+    </div>
+    <div class="rows" id="rows"></div>
+    <div class="rowinfo" id="rowinfo"></div>
+    <div class="pen">
+      <span class="label" style="margin:0">Fehlwürfe je −5</span>
+      <div class="pens" id="pens"></div>
+    </div>
+    <p class="note hint-line" id="hint"></p>
+    <p class="note">Hat ein Mitspieler eine Reihe geschlossen, tippe bei dir auf das Schloss dieser Reihe. Dann geht dort nur noch die Endzahl, das Schloss-Kreuz bekommt nur wer zuerst geschlossen hat.</p>
+    <div class="actions" style="margin-top:14px">
+      <button class="btn" id="finish">Block fertig</button>
+      <button class="btn ghost" id="delBlock">Block entfernen</button>
+    </div>
+    <div class="scale" id="scale"></div>
+  </section>
+
+  <section class="sheet">
+    <p class="label">Letzte Ergebnisse auf diesem Gerät</p>
+    <ul class="hist" id="hist"></ul>
+  </section>
+</div>
+
+<script>
+(function(){
+  var $ = function(s){ return document.querySelector(s); };
+  var ROWS = [
+    {k:'r', name:'Rot',  nums:[2,3,4,5,6,7,8,9,10,11,12]},
+    {k:'y', name:'Gelb', nums:[2,3,4,5,6,7,8,9,10,11,12]},
+    {k:'g', name:'Grün', nums:[12,11,10,9,8,7,6,5,4,3,2]},
+    {k:'b', name:'Blau', nums:[12,11,10,9,8,7,6,5,4,3,2]}
+  ];
+  var LAST = 10;
+  var LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" fill="currentColor"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+  var KEY = 'qwixx-block-v1';
+  var tri = function(n){ return n*(n+1)/2; };
+  var uid = function(){ return Math.random().toString(36).slice(2,10); };
+
+  /* ---------- Speicher (nur auf diesem Gerät) ---------- */
+  var D = { blocks:[], cur:null, hist:[] };
+  try { var raw = JSON.parse(localStorage.getItem(KEY) || 'null'); if (raw) D = raw; } catch(e) {}
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(D)); } catch(e) {} }
+  function blank(name){ return { id:uid(), name:name, marks:{r:[],y:[],g:[],b:[]}, own:{}, other:{}, pen:0 }; }
+  if (!D.blocks.length) { D.blocks.push(blank('Spieler 1')); D.cur = D.blocks[0].id; save(); }
+
+  var B = function(){ return D.blocks.find(function(b){ return b.id === D.cur; }) || D.blocks[0]; };
+  var showNew = false, finishArmed = false, delArmed = false;
+
+  /* ---------- Wertung ---------- */
+  function lastIdx(b,k){ var m=b.marks[k]; return m.length ? Math.max.apply(null,m) : -1; }
+  function count(b,k){ return b.marks[k].length + (b.own[k] ? 1 : 0); }
+  function score(b){
+    var rows = {}, t = 0;
+    ROWS.forEach(function(r){ rows[r.k] = tri(count(b,r.k)); t += rows[r.k]; });
+    return { rows:rows, total: t - b.pen*5 };
+  }
+  function closedRows(b){ return ROWS.filter(function(r){ return b.own[r.k] || b.other[r.k]; }).length; }
+
+  /* ---------- Ankreuzen ---------- */
+  function tap(k, i){
+    var b = B(), m = b.marks[k], last = lastIdx(b,k), row = ROWS.find(function(r){ return r.k===k; });
+    var hint = $('#hint');
+    if (i === last) {                      // letztes Kreuz zurücknehmen
+      b.marks[k] = m.filter(function(x){ return x !== i; });
+      if (i === LAST) b.own[k] = false;
+      hint.textContent = 'Kreuz zurückgenommen.';
+      save(); render(); return;
+    }
+    if (m.indexOf(LAST) >= 0) { hint.textContent = 'In ' + row.name + ' hast du die Endzahl schon.'; return; }
+    if (b.other[k] && i !== LAST) { hint.textContent = row.name + ' ist geschlossen. Nur die ' + row.nums[LAST] + ' geht noch.'; return; }
+    if (i <= last) { hint.textContent = 'Nur nach rechts ankreuzen. Übersprungene Zahlen sind weg.'; return; }
+    if (i === LAST && m.length < 5) { hint.textContent = 'Die letzte Zahl geht erst ab fünf Kreuzen in der Reihe.'; return; }
+    b.marks[k] = m.concat([i]);
+    if (i === LAST) {
+      if (b.other[k]) hint.textContent = 'Endzahl angekreuzt. Das Schloss-Kreuz hat schon jemand anders.';
+      else { b.own[k] = true; hint.textContent = row.name + ' geschlossen! Das Schloss zählt als zusätzliches Kreuz. Sag es den anderen.'; }
+    } else hint.textContent = '';
+    save(); render();
+  }
+  function tapLock(k){
+    var b = B(), row = ROWS.find(function(r){ return r.k===k; });
+    if (b.own[k]) { $('#hint').textContent = 'Du hast ' + row.name + ' selbst geschlossen. Zum Zurücknehmen die Endzahl antippen.'; return; }
+    b.other[k] = !b.other[k];
+    $('#hint').textContent = b.other[k] ? row.name + ' ist als von einem Mitspieler geschlossen markiert.' : row.name + ' ist wieder offen.';
+    save(); render();
+  }
+  function tapPen(i){ var b = B(); b.pen = (b.pen === i+1) ? i : i+1; save(); render(); }
+
+  /* ---------- Anzeige ---------- */
+  function el(tag, cls, txt){ var e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; return e; }
+
+  function renderTabs(){
+    var nav = $('#tabs'); nav.innerHTML = '';
+    D.blocks.forEach(function(b){
+      var t = el('button','tab',b.name); t.setAttribute('aria-selected', b.id===D.cur && !showNew);
+      t.onclick = function(){ D.cur=b.id; showNew=false; finishArmed=false; delArmed=false; $('#hint').textContent=''; save(); render(); };
+      nav.appendChild(t);
+    });
+    var add = el('button','tab add','+'); add.setAttribute('aria-label','Neuen Block öffnen'); add.setAttribute('aria-selected', showNew);
+    add.onclick = function(){ showNew=true; render(); $('#newName').focus(); };
+    nav.appendChild(add);
+  }
+
+  function render(){
+    renderTabs();
+    $('#newBox').hidden = !showNew;
+    var b = B(), sc = score(b);
+    $('#who').textContent = b.name;
+    $('#total').innerHTML = ''; $('#total').append(String(sc.total)); $('#total').appendChild(el('small',null,'Punkte'));
+
+    var rows = $('#rows'); rows.innerHTML = '';
+    ROWS.forEach(function(r){
+      var div = el('div','qrow'); div.dataset.c = r.k;
+      var m = b.marks[r.k], last = lastIdx(b,r.k);
+      if (b.own[r.k] || b.other[r.k]) div.classList.add('closed');
+      r.nums.forEach(function(n,i){
+        var c = el('button','cell',n), x = m.indexOf(i) >= 0;
+        if (x) c.classList.add('x'); else if (i < last) c.classList.add('skip');
+        if (x && i === last) c.classList.add('last');
+        if (i === LAST && !x && m.length >= 5) c.classList.add('hint');
+        c.setAttribute('aria-label', r.name + ' ' + n + (x ? ', angekreuzt' : ''));
+        c.onclick = function(){ tap(r.k,i); };
+        div.appendChild(c);
+      });
+      var l = el('button','cell lock' + (b.own[r.k] ? ' x' : '') + (b.other[r.k] ? ' other' : ''));
+      l.innerHTML = LOCK;
+      l.setAttribute('aria-label', 'Schloss ' + r.name + (b.own[r.k] ? ': von dir geschlossen' : b.other[r.k] ? ': von Mitspieler geschlossen' : ': antippen, wenn ein Mitspieler geschlossen hat'));
+      l.onclick = function(){ tapLock(r.k); };
+      div.appendChild(l);
+      rows.appendChild(div);
+    });
+
+    var ri = $('#rowinfo'); ri.innerHTML = '';
+    ROWS.forEach(function(r){
+      var d = el('div','ri'); d.dataset.c = r.k;
+      d.appendChild(el('b',null,sc.rows[r.k]));
+      d.appendChild(el('span',null,r.name + ' · ' + count(b,r.k) + ' ✕'));
+      ri.appendChild(d);
+    });
+
+    var pe = $('#pens'); pe.innerHTML = '';
+    for (var i=0;i<4;i++) (function(i){
+      var p = el('button','pbox' + (i < b.pen ? ' x' : '')); p.setAttribute('aria-label','Fehlwurf ' + (i+1));
+      p.onclick = function(){ tapPen(i); }; pe.appendChild(p);
+    })(i);
+
+    // Spielende-Hinweis
+    var eb = $('#endBox');
+    if (closedRows(b) >= 2 || b.pen >= 4) {
+      eb.hidden = false; eb.innerHTML = '';
+      eb.appendChild(el('strong',null,'Spielende'));
+      eb.appendChild(el('div',null,(b.pen >= 4 ? 'Vierter Fehlwurf. ' : 'Zwei Reihen sind geschlossen. ') + b.name + ' hat ' + sc.total + ' Punkte. Tippe auf „Block fertig“, dann ist der Block wieder leer.'));
+    } else eb.hidden = true;
+
+    $('#finish').textContent = finishArmed ? 'Sicher? ' + sc.total + ' Punkte speichern' : 'Block fertig';
+    $('#delBlock').textContent = delArmed ? 'Sicher? Nochmal tippen' : 'Block entfernen';
+    $('#delBlock').hidden = D.blocks.length <= 1;
+
+    var hl = $('#hist'); hl.innerHTML = '';
+    if (!D.hist.length) hl.appendChild(el('li','note','Noch keine fertigen Blöcke.'));
+    D.hist.slice(0,15).forEach(function(h){
+      var li = el('li'); var a = el('span',null,h.name+' ');
+      a.appendChild(el('span','meta',new Date(h.at).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})));
+      li.appendChild(a); li.appendChild(el('b',null,h.pts + ' P')); hl.appendChild(li);
+    });
+  }
+
+  /* ---------- Knöpfe ---------- */
+  $('#newGo').onclick = function(){
+    var n = $('#newName').value.trim() || ('Spieler ' + (D.blocks.length+1));
+    var nb = blank(n); D.blocks.push(nb); D.cur = nb.id; showNew = false; $('#newName').value = ''; $('#hint').textContent = '';
+    save(); render();
+  };
+  $('#newName').addEventListener('keydown', function(e){ if (e.key === 'Enter') $('#newGo').click(); });
+  $('#newCancel').onclick = function(){ showNew = false; render(); };
+
+  $('#who').onclick = function(){
+    var b = B(), w = $('#who'), inp = el('input'); inp.type='text'; inp.value=b.name;
+    w.replaceWith(inp); inp.focus(); inp.select();
+    var done = function(){ var v = inp.value.trim(); if (v) b.name = v; save(); inp.replaceWith(w); render(); };
+    inp.onblur = done; inp.onkeydown = function(e){ if (e.key==='Enter') inp.blur(); };
+  };
+
+  $('#finish').onclick = function(){
+    if (!finishArmed) { finishArmed = true; render(); setTimeout(function(){ finishArmed=false; render(); }, 4000); return; }
+    finishArmed = false;
+    var b = B(), sc = score(b);
+    D.hist.unshift({ name:b.name, pts:sc.total, at:Date.now() });
+    D.hist = D.hist.slice(0,50);
+    b.marks = {r:[],y:[],g:[],b:[]}; b.own = {}; b.other = {}; b.pen = 0;   // Block wieder weiß
+    $('#hint').textContent = sc.total + ' Punkte gespeichert. Dein Block ist wieder leer.';
+    save(); render(); window.scrollTo({top:0, behavior:'smooth'});
+  };
+  $('#delBlock').onclick = function(){
+    if (!delArmed) { delArmed = true; render(); setTimeout(function(){ delArmed=false; render(); }, 3500); return; }
+    delArmed = false;
+    D.blocks = D.blocks.filter(function(b){ return b.id !== D.cur; }); D.cur = D.blocks[0].id;
+    save(); render();
+  };
+
+  var s = $('#scale');
+  for (var n=1;n<=12;n++){ var sp = el('span'); sp.textContent = n + '✕'; sp.appendChild(el('em',null,tri(n))); s.appendChild(sp); }
+
+  render();
+})();
+</script>
+</body>
+</html>
